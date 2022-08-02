@@ -1,0 +1,45 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'pry'
+require 'net/http'
+require 'json'
+require 'optparse'
+
+options = {}
+option_parser = OptionParser.new do |parser|
+  parser.on('-s', '--set SET_NAME', 'Render set cards')
+end
+
+option_parser.parse!(into: options)
+
+uri = URI('https://api.magicthegathering.io/v1/cards')
+res = Net::HTTP.get_response(uri)
+
+response = JSON.parse(res.body)
+cards = response['cards']
+
+# first
+cards_set = cards.group_by { |card| card['set'] }
+puts '===================================================================='
+puts cards_set
+puts '===================================================================='
+
+# second
+hash = {}
+puts '===================================================================='
+cards_set.each do |_key, value|
+  puts hash['key'] = value.group_by { |set| set['rarity'] }
+end
+puts '===================================================================='
+
+# third
+if options.to_h.key?(:set)
+  set = options.to_h[:set]
+  puts '===================================================================='
+  set_cards = cards_set[set].select do |card|
+    card['colors'].include?('Red') || card['colors'].include?('Blue')
+  end
+  puts set_cards
+  puts '===================================================================='
+end
